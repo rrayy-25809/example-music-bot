@@ -1,0 +1,6 @@
+asyncio
+discord.py[voice]
+pip
+youtube-dl
+ffmpeg-python
+urllib3
