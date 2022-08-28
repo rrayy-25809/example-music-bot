@@ -6,3 +6,6 @@ this is example for discord music bot
 
 but this is yet bata
 그러나 아직은 아닙니다
+
+this bot support korea
+이 봇은 한국어만 지원합니다
