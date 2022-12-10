@@ -1,32 +1,45 @@
 import discord
 from discord.ext import commands
 import discord.ext.commands.bot
-from discord.utils import get
 from discord.ui import Button, View
 from youtube_dl import YoutubeDL
 from discord import FFmpegPCMAudio
-import asyncio
+import json
 import os
+import sys
 
-bot = commands.Bot(command_prefix='<', intents=discord.Intents.all()) #명령어 접두사를 <로 설정
+
+with open('bot.json', 'r', encoding='utf-8') as f:
+    bot_data = json.load(f)
+
+prefix = bot_data["prefix"]
+bot = commands.Bot(command_prefix = prefix, intents=discord.Intents.all()) #명령어 접두사 설정
+token = bot_data["token"]
+if token=="":
+    print("토큰 값을 찾을 수 없습니다")
+    sys.exit("다시 시도해 주세요")
 
 user_list = []
 music_list = []
-music_now = 0
-msg = 0
+music_now:int = 0
+msg = None
 
 @bot.event
 async def on_ready():
-    print('당신의 봇, ', bot.user.name, "가 현재 온라인 입니다!")
-    activity = "<명령어"#~하는 중 ex)<명령어 하는 중
-    await bot.change_presence(status=discord.Status.online, activity=discord.Game(activity))
-    #온라인
-    #await bot.change_presence(status=discord.Status.offline, activity=discord.Game(activity))
-    #오프라인
-    #await bot.change_presence(status=discord.Status.dnd, activity=discord.Game(activity))
-    #다른 용무중
-    #await bot.change_presence(status=discord.Status.idle, activity=discord.Game(activity))
-    #자리 비움
+    print(bot.user.name + "가 현재 온라인 입니다!")
+    activity = prefix + "명령어" #~하는 중 ex)<명령어 하는 중
+    if bot_data["status"] =="online":
+        status = discord.Status.online
+    elif  bot_data["status"] == "offline":
+        status = discord.Status.offline
+    elif bot_data["status"] == "dnd":
+        status=discord.Status.dnd
+    elif bot_data["status"] =="idle":
+        status=discord.Status.idle
+    else:
+        print("prefix 값을 다시 설정해 주세요")
+        sys.exit("다시 시도해 주세요")
+    await bot.change_presence(status=status, activity=discord.Game(activity))
 
 
 @bot.command()
@@ -249,15 +262,6 @@ async def 음악도움말(ctx):
     embed.add_field(name="플레이어", value="음악 플레이어를 생성합니다!", inline=True)
     embed.add_field(name="목록", value="대기열 목록을 불러옵니다!", inline=True)
     embed.add_field(name="목록초기화", value="대기열 목록을 초기화 합니다!", inline=True)
-    #embed.add_field(name="자막", value="현재 재생돼는 음악의 자막을 띄웁니다.", inline=True)
-    await ctx.send(embed=embed)
-
-@bot.command()
-async def 도움말(ctx):
-    embed = discord.Embed(title="도움말", description="주제: 전체", color=0x24d0ff)
-    embed.add_field(name="주의", value="현재 음악 명령어만 동작합니다.", inline=True)
-    embed.add_field(name="바이트 공식 사이트", value="https://bite-discordbot-mbb.netlify.app", inline=True)
-    embed.add_field(name="음악도움말", value="음악 명령어의 사용법을 알려줍니다.", inline=True)
     await ctx.send(embed=embed)
 
 @bot.command()
@@ -280,19 +284,5 @@ async def 목록초기화(ctx):
     user_list.clear()
     music_list.clear()
     await ctx.send(embed = discord.Embed(title="목록초기화", description="목록 리스트를 초기화 하였습니다.", color=0x24d0ff))
-
-
-def read_token():
-    if (os.path.isfile("test.txt")):
-        with open("account.txt", "r") as f:
-            file = f.readline()
-    else:
-        print("현재 account.txt 파일이 없습니다.파일 안에 봇의 토큰을 써 주세요")
-        file = "we have not token"
-    return file
-    
-
-token = read_token()
-client = discord.Client()
 
 bot.run(token)
